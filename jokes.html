@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Random Joke Generator</title>
+  <style>
+    :root{--bg:#0f1720;--card:#0b1220;--accent:#ff6fa9;--muted:#9aa5b1}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#06121a,#071826);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; color:#e6eef6}
+    .container{width:min(680px,92%);padding:28px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));box-shadow:0 10px 30px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.04);text-align:center}
+    h1{font-size:20px;margin-bottom:10px;color:var(--accent)}
+    p.lead{color:var(--muted);margin-bottom:20px}
+    .card{background:var(--card);padding:20px;border-radius:12px;text-align:left;border:1px solid rgba(255,255,255,0.03)}
+    .joke-setup{font-size:18px;margin-bottom:10px;min-height:48px}
+    .joke-punch{font-weight:700;font-size:20px;color:#fff;min-height:26px}
+    .controls{display:flex;gap:12px;margin-top:18px}
+    button{background:linear-gradient(90deg,var(--accent),#ff3f88);border:0;padding:10px 14px;border-radius:10px;color:white;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .meta{margin-top:12px;color:var(--muted);font-size:13px}
+    .small{font-size:12px;color:var(--muted)}
+    a.link{color:var(--accent);text-decoration:none}
+
+    @media (max-width:520px){.joke-setup{font-size:16px}.joke-punch{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Random Joke Generator</h1>
+    <p class="lead">Powered by the Official Joke API — click the button to fetch a fresh joke.</p>
+
+    <div class="card" id="card">
+      <div class="joke-setup" id="setup">Click "Get a joke" to start 😄</div>
+      <div class="joke-punch" id="punch"></div>
+
+      <div class="controls">
+        <button id="getJoke">Get a joke</button>
+        <button id="another" class="secondary">Another</button>
+        <button id="copy" class="secondary">Copy</button>
+      </div>
+
+      <div class="meta">
+        <span id="type"></span>
+        <div class="small">API: <a class="link" href="https://official-joke-api.appspot.com/" target="_blank" rel="noopener">official-joke-api</a> · Page: <a class="link" href="/faddii/" target="_blank">Back</a></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fetches a random joke from Official Joke API and updates the UI.
+    const setupEl = document.getElementById('setup');
+    const punchEl = document.getElementById('punch');
+    const typeEl = document.getElementById('type');
+    const getBtn = document.getElementById('getJoke');
+    const anotherBtn = document.getElementById('another');
+    const copyBtn = document.getElementById('copy');
+
+    async function fetchJoke() {
+      try {
+        // Show a loading state
+        getBtn.disabled = true;
+        getBtn.textContent = 'Loading...';
+        setupEl.textContent = 'Finding a funny one...';
+        punchEl.textContent = '';
+        typeEl.textContent = '';
+
+        // Official Joke API (no key required)
+        const res = await fetch('https://official-joke-api.appspot.com/random_joke');
+        if (!res.ok) throw new Error('Network response not ok');
+
+        const joke = await res.json();
+
+        // The API returns: {id, type, setup, punchline}
+        setupEl.textContent = joke.setup || '...';
+        punchEl.textContent = joke.punchline || '';
+        typeEl.textContent = joke.type ? 'Type: ' + joke.type : '';
+
+        // Restore button
+        getBtn.disabled = false;
+        getBtn.textContent = 'Get a joke';
+      } catch (err) {
+        setupEl.textContent = 'Oops — couldn\'t load a joke.';
+        punchEl.textContent = '';
+        typeEl.textContent = '';
+        getBtn.disabled = false;
+        getBtn.textContent = 'Get a joke';
+        console.error(err);
+      }
+    }
+
+    getBtn.addEventListener('click', fetchJoke);
+    anotherBtn.addEventListener('click', fetchJoke);
+
+    copyBtn.addEventListener('click', () => {
+      const text = setupEl.textContent + '\n' + punchEl.textContent;
+      if (!navigator.clipboard) {
+        alert('Clipboard API not supported');
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => (copyBtn.textContent = 'Copy'), 1200);
+      });
+    });
+
+    // Optionally fetch one on load
+    // fetchJoke();
+  </script>
+</body>
+</html>
